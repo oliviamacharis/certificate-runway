@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate Runway — MIT · PON · Tufts</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117;
+    --parchment: #f5f0e8;
+    --cream: #faf7f2;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --gold-muted: #e8d5a0;
+    --slate: #4a5568;
+    --mist: #e8e4dc;
+    --done: #2d6a4f;
+    --done-bg: #d8f3dc;
+    --active: #1a4a7a;
+    --active-bg: #dbeafe;
+    --pending: #6b4c11;
+    --pending-bg: #fef3c7;
+    --future: #9ca3af;
+    --future-bg: #f3f4f6;
+    --accent-red: #8b2635;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── PRINT / PDF STYLES ── */
+  @media print {
+    .no-print { display: none !important; }
+    body { background: white; }
+    .section { page-break-inside: avoid; }
+    .header { background: var(--ink) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .milestone-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 48px 64px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 60px,
+      rgba(184,134,11,0.04) 60px, rgba(184,134,11,0.04) 61px
+    );
+  }
+  .header-inner { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+  .header-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold-muted);
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 58px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -1px;
+  }
+  .header h1 span { color: var(--gold-light); }
+  .header-subtitle {
+    font-size: 14px;
+    color: rgba(245,240,232,0.65);
+    margin-top: 10px;
+    font-weight: 300;
+    letter-spacing: 0.3px;
+    max-width: 520px;
+  }
+  .header-meta {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .partner-badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge {
+    background: rgba(184,134,11,0.18);
+    border: 1px solid rgba(184,134,11,0.35);
+    color: var(--gold-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 2px;
+  }
+  .last-updated {
+    font-size: 11px;
+    color: rgba(245,240,232,0.4);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── PHASE PROGRESS BAR ── */
+  .progress-band {
+    background: var(--ink);
+    padding: 0 64px 32px;
+    position: relative;
+  }
+  .progress-band-inner { max-width: 1200px; margin: 0 auto; }
+  .phase-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+  }
+  .phase-track::before {
+    content: '';
+    position: absolute;
+    top: 18px; left: 18px; right: 18px;
+    height: 2px;
+    background: rgba(255,255,255,0.1);
+    z-index: 0;
+  }
+  .phase-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    cursor: default;
+  }
+  .phase-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    border: 2px solid;
+    transition: transform 0.2s;
+  }
+  .phase-node:hover .phase-dot { transform: scale(1.1); }
+  .phase-dot.done { background: var(--done); border-color: var(--done); color: white; }
+  .phase-dot.active { background: var(--gold); border-color: var(--gold); color: var(--ink); animation: pulse 2s infinite; }
+  .phase-dot.pending { background: transparent; border-color: rgba(184,134,11,0.4); color: var(--gold-muted); }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(184,134,11,0.4); } 50% { box-shadow: 0 0 0 6px rgba(184,134,11,0); } }
+  .phase-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.5);
+    margin-top: 8px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    max-width: 80px;
+    line-height: 1.4;
+  }
+  .phase-node.active-phase .phase-label { color: var(--gold-light); }
+
+  /* ── MAIN LAYOUT ── */
+  .main { max-width: 1200px; margin: 0 auto; padding: 48px 64px 80px; }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--mist);
+  }
+  .section-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--gold-muted);
+    line-height: 1;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .section-desc {
+    font-size: 13px;
+    color: var(--slate);
+    font-weight: 300;
+    margin-left: auto;
+    font-style: italic;
+  }
+  .section { margin-bottom: 52px; }
+
+  /* ── WORKSTREAM CARDS ── */
+  .workstream-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+  .ws-card {
+    background: white;
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .ws-card:hover { box-shadow: 0 8px 32px rgba(15,17,23,0.08); transform: translateY(-2px); }
+  .ws-card-header {
+    padding: 18px 20px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--mist);
+  }
+  .ws-card-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.4;
+    max-width: 220px;
+  }
+  .status-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .status-chip.done { background: var(--done-bg); color: var(--done); }
+  .status-chip.active { background: var(--active-bg); color: var(--active); }
+  .status-chip.pending { background: var(--pending-bg); color: var(--pending); }
+  .status-chip.future { background: var(--future-bg); color: var(--future); }
+
+  .ws-card-body { padding: 14px 20px 16px; }
+  .ws-task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(232,228,220,0.5);
+    font-size: 13px;
+    color: var(--slate);
+    line-height: 1.5;
+  }
+  .ws-task:last-child { border-bottom: none; }
+  .task-icon { flex-shrink: 0; margin-top: 2px; font-size: 13px; }
+  .ws-note {
+    font-size: 11px;
+    color: var(--gold);
+    font-style: italic;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--gold-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── PROGRESS BARS ── */
+  .progress-bar-wrap {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: var(--mist);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .progress-bar-fill.done { background: var(--done); }
+  .progress-bar-fill.active { background: var(--gold); }
+  .progress-bar-fill.pending { background: var(--gold-muted); }
+  .progress-bar-fill.future { background: var(--mist); }
+  .progress-pct { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--slate); }
+
+  /* ── CORE THEMES ── */
+  .themes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .themes-grid { grid-template-columns: 1fr; } }
+  .theme-card {
+    border-radius: 6px;
+    padding: 24px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+  }
+  .theme-card::after {
+    content: attr(data-num);
+    position: absolute;
+    bottom: -10px; right: 12px;
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 700;
+    opacity: 0.06;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .theme-card.exists { background: #f0fdf4; border-color: #a7f3d0; }
+  .theme-card.develop { background: #fffbeb; border-color: var(--gold-muted); }
+  .theme-icon { font-size: 22px; margin-bottom: 10px; }
+  .theme-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .theme-card.exists .theme-label { color: var(--done); }
+  .theme-card.develop .theme-label { color: var(--pending); }
+  .theme-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .theme-desc { font-size: 12.5px; color: var(--slate); line-height: 1.6; font-weight: 300; }
+
+  /* ── MILESTONES ── */
+  .milestone-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  @media (max-width: 1000px) { .milestone-grid { grid-template-columns: repeat(2, 1fr); } }
+  .milestone-item {
+    padding: 20px 22px;
+    border-right: 1px solid var(--mist);
+    border-bottom: 1px solid var(--mist);
+    background: white;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .milestone-item:hover { background: var(--cream); }
+  .milestone-item:nth-child(4n) { border-right: none; }
+  .milestone-item:nth-last-child(-n+4) { border-bottom: none; }
+  .ms-seq {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .ms-text {
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .ms-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    position: absolute;
+    top: 20px; right: 18px;
+  }
+  .ms-dot.done { background: var(--done); }
+  .ms-dot.active { background: var(--gold); animation: pulse 2s infinite; }
+  .ms-dot.future { background: var(--mist); border: 1px solid var(--future); }
+
+  /* ── PARTNERSHIP TABLE ── */
+  .partner-table { width: 100%; border-collapse: collapse; }
+  .partner-table th {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 400;
+  }
+  .partner-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--mist);
+    vertical-align: middle;
+    color: var(--slate);
+  }
+  .partner-table tr:last-child td { border-bottom: none; }
+  .partner-table tr:hover td { background: var(--cream); }
+  .partner-name { font-weight: 600; color: var(--ink); }
+  .partner-type {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+  .partner-type.active { background: var(--active-bg); color: var(--active); }
+  .partner-type.passive { background: var(--future-bg); color: var(--future); }
+  .partner-table-wrap { border: 1px solid var(--mist); border-radius: 6px; overflow: hidden; background: white; }
+
+  /* ── TIMELINE / GANTT ── */
+  .timeline-wrap { background: white; border: 1px solid var(--mist); border-radius: 6px; overflow-x: auto; }
+  .timeline-inner { min-width: 900px; }
+  .tl-header {
+    display: grid;
+    grid-template-columns: 200px repeat(8, 1fr);
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tl-header-cell, .tl-label, .tl-cell {
+    padding: 10px 12px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 200px repeat(8, 1fr);
+    border-bottom: 1px solid var(--mist);
+  }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-row:hover .tl-label { background: var(--cream); }
+  .tl-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    border-right: 1px solid var(--mist);
+    display: flex;
+    align-items: center;
+  }
+  .tl-cell { position: relative; border-right: 1px solid rgba(232,228,220,0.5); }
+  .tl-bar {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    height: 10px;
+    border-radius: 2px;
+  }
+  .tl-bar.done { background: var(--done); }
+  .tl-bar.active { background: var(--gold); }
+  .tl-bar.pending { background: var(--gold-muted); }
+  .tl-bar.future { background: var(--mist); border: 1px solid var(--future); }
+  .today-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent-red);
+    z-index: 10;
+  }
+  .today-label {
+    position: absolute;
+    top: -18px;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--accent-red);
+    white-space: nowrap;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--ink);
+    color: rgba(245,240,232,0.4);
+    padding: 24px 64px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── PRINT BUTTON ── */
+  .print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(184,134,11,0.15);
+    border: 1px solid rgba(184,134,11,0.35);
+    color: var(--gold-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .print-btn:hover { background: rgba(184,134,11,0.25); }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding: 14px 18px;
+    background: white;
+    border: 1px solid var(--mist);
+    border-radius: 6px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--slate); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .legend-dot.done { background: var(--done); }
+  .legend-dot.active { background: var(--gold); }
+  .legend-dot.pending { background: var(--gold-muted); }
+  .legend-dot.future { background: var(--mist); border: 1px solid var(--future); }
+
+  /* ── DIVIDER ── */
+  .ruled { border: none; border-top: 1px solid var(--mist); margin: 40px 0; }
+
+  @media (max-width: 768px) {
+    .header, .progress-band, .main, .footer { padding-left: 24px; padding-right: 24px; }
+    .workstream-grid { grid-template-columns: 1fr; }
+    .milestone-grid { grid-template-columns: repeat(2, 1fr); }
+    .themes-grid { grid-template-columns: 1fr; }
+    .section-desc { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-brand">Certificate Programme · Living Roadmap</div>
+        <h1>Certificate<br><span>Runway</span></h1>
+        <p class="header-subtitle">Certificate Program in Diplomatic Intelligence: a moving target developed through partner engagement, content development and pilot workshops.</p>
+        <p class="header-subtitle" style="margin-top:8px; font-size:13px; opacity:0.8;">Possibly a multi-institutional programme in Diplomacy &amp; Cultural Leadership — developed across MIT · MIT–Harvard PON · Tufts</p>
+      </div>
+      <div class="header-meta">
+        <div class="partner-badges">
+          <span class="badge">MIT</span>
+          <span class="badge">MIT–Harvard PON</span>
+          <span class="badge">Tufts</span>
+        </div>
+        <div class="last-updated">Last updated: March 2026</div>
+        <button class="print-btn no-print" onclick="window.print()">
+          ↓ Export PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE RUNWAY BAR -->
+<div class="progress-band">
+  <div class="progress-band-inner">
+    <div class="phase-track">
+      <div class="phase-node active-phase">
+        <div class="phase-dot active">01</div>
+        <div class="phase-label">Programme Design</div>
+      </div>
+      <div class="phase-node active-phase">
+        <div class="phase-dot active">02</div>
+        <div class="phase-label">Confirm Partners</div>
+      </div>
+      <div class="phase-node">
+        <div class="phase-dot pending">03</div>
+        <div class="phase-label">Secure Financing</div>
+      </div>
+      <div class="phase-node">
+        <div class="phase-dot pending">04</div>
+        <div class="phase-label">Practitioner Engagement</div>
+      </div>
+      <div class="phase-node">
+        <div class="phase-dot pending">05</div>
+        <div class="phase-label">Content Development</div>
+      </div>
+      <div class="phase-node">
+        <div class="phase-dot future">06</div>
+        <div class="phase-label">Pilot Phase</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEGEND -->
+  <div class="legend no-print">
+    <div class="legend-item"><div class="legend-dot done"></div> Complete</div>
+    <div class="legend-item"><div class="legend-dot active"></div> In Progress</div>
+    <div class="legend-item"><div class="legend-dot pending"></div> Planned</div>
+    <div class="legend-item"><div class="legend-dot future"></div> Future</div>
+  </div>
+
+  <!-- SECTION 1: PROGRAMME DESIGN -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">01</div>
+      <div>
+        <div class="section-title">Programme Design</div>
+      </div>
+      <div class="section-desc no-print">Mock-up of main objectives, structure &amp; core themes</div>
+    </div>
+
+    <!-- Core Themes -->
+    <div class="themes-grid" style="margin-bottom: 24px;">
+      <div class="theme-card exists" data-num="I">
+        <div class="theme-icon">🕊️</div>
+        <div class="theme-label">✓ Existing</div>
+        <div class="theme-title">Mediation, Diplomacy &amp; Leadership</div>
+        <div class="theme-desc">Core curriculum building on proven frameworks for international negotiation, conflict resolution, and leadership in high-stakes environments.</div>
+      </div>
+      <div class="theme-card exists" data-num="II">
+        <div class="theme-icon">🌐</div>
+        <div class="theme-label">✓ Existing</div>
+        <div class="theme-title">Cultural Sensitivity &amp; AI Challenges</div>
+        <div class="theme-desc">Navigating culturally sensitive questions today — including the intersection of AI, ethics, and cross-cultural communication in modern diplomacy.</div>
+      </div>
+      <div class="theme-card develop" data-num="III">
+        <div class="theme-icon">📜</div>
+        <div class="theme-label">⟳ To Develop</div>
+        <div class="theme-title">Cultural–Historic Part</div>
+        <div class="theme-desc">A global history of diplomacy — to be developed through the platform. Working up materials to teach historical diplomatic traditions across civilisations.</div>
+      </div>
+    </div>
+
+    <div class="workstream-grid">
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Mock-Up Concept Note</div>
+          <span class="status-chip pending">To Develop</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Articulate core learning outcomes</div>
+          <div class="ws-task"><span class="task-icon">○</span> Define target audience (government, business, NGOs)</div>
+          <div class="ws-task"><span class="task-icon">○</span> Define program structure</div>
+          <div class="ws-task"><span class="task-icon">○</span> Stakeholder review of programme concept</div>
+          <div class="ws-note">🔑 Milestone: Internal clarity on programme concept</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- SECTION 2: PARTNERSHIPS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">02</div>
+      <div>
+        <div class="section-title">Confirm Partnerships</div>
+      </div>
+      <div class="section-desc no-print">Active co-organisers &amp; passive stakeholders</div>
+    </div>
+
+    <div class="partner-table-wrap" style="margin-bottom: 20px;">
+      <table class="partner-table">
+        <thead>
+          <tr>
+            <th>Partner / Institution</th>
+            <th>Role</th>
+            <th>Structure</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="partner-name">MIT</span></td>
+            <td>Lead institution, curriculum anchor</td>
+            <td><span class="partner-type active">Active</span></td>
+            <td>◷ In discussion</td>
+          </tr>
+          <tr>
+            <td><span class="partner-name">MIT–Harvard PON</span></td>
+            <td>Programme on Negotiation — co-organiser</td>
+            <td><span class="partner-type active">Active</span></td>
+            <td>○ Identified</td>
+          </tr>
+          <tr>
+            <td><span class="partner-name">Tufts University</span></td>
+            <td>Academic partner, faculty contribution</td>
+            <td><span class="partner-type active">Active</span></td>
+            <td>○ Identified</td>
+          </tr>
+          <tr>
+            <td><span class="partner-name">NGO Partners (TBD)</span></td>
+            <td>Practitioner engagement, field perspective</td>
+            <td><span class="partner-type active">Active</span></td>
+            <td>○ To identify</td>
+          </tr>
+          <tr>
+            <td><span class="partner-name">Governments / Ministries</span></td>
+            <td>End-user pipeline — 1 engagement (Bangladesh)</td>
+            <td><span class="partner-type passive">Passive</span></td>
+            <td>◷ TBD — 1 early contact</td>
+          </tr>
+          <tr>
+            <td><span class="partner-name">Programme Participants</span></td>
+            <td>Cohort users, feedback providers</td>
+            <td><span class="partner-type passive">Passive</span></td>
+            <td>○ Future engagement</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="workstream-grid">
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Active Co-Organisers</div>
+          <span class="status-chip active">In Progress</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">◷</span> MIT — in discussion</div>
+          <div class="ws-task"><span class="task-icon">○</span> MIT–Harvard PON — identified, not yet in discussion</div>
+          <div class="ws-task"><span class="task-icon">○</span> Tufts — identified, not yet in discussion</div>
+          <div class="ws-task"><span class="task-icon">○</span> MOU / partnership agreements drafted</div>
+          <div class="ws-note">🔑 Milestone: Confirmation of key partners</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill active" style="width:20%"></div></div>
+            <div class="progress-pct">20%</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Passive Structure &amp; User Base</div>
+          <span class="status-chip pending">Planned</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Government stakeholders mapped</div>
+          <div class="ws-task"><span class="task-icon">○</span> Initial outreach to 2–3 ministries</div>
+          <div class="ws-task"><span class="task-icon">○</span> User/participant pipeline scoped</div>
+          <div class="ws-note">🔑 Milestone: First external partner engaged</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill pending" style="width:10%"></div></div>
+            <div class="progress-pct">10%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- SECTION 3: FINANCING -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">03</div>
+      <div>
+        <div class="section-title">Secure Financing</div>
+      </div>
+      <div class="section-desc no-print">Grants, internal funding &amp; business model</div>
+    </div>
+
+    <div class="workstream-grid">
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Grants &amp; Internal MIT Funding</div>
+          <span class="status-chip active">In Progress</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">◷</span> Submit grant proposals</div>
+          <div class="ws-task"><span class="task-icon">○</span> Internal MIT seed funding application</div>
+          <div class="ws-task"><span class="task-icon">○</span> Establish budget framework</div>
+          <div class="ws-note">🔑 Milestone: First funding secured</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill active" style="width:20%"></div></div>
+            <div class="progress-pct">20%</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Business Model Definition</div>
+          <span class="status-chip pending">Planned</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Revenue model options assessed (fee-based / sponsored)</div>
+          <div class="ws-task"><span class="task-icon">○</span> Pricing strategy for certificate programme</div>
+          <div class="ws-task"><span class="task-icon">○</span> Sustainability model post-pilot defined</div>
+          <div class="ws-task"><span class="task-icon">○</span> Partner cost-sharing framework</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Format Definition</div>
+          <span class="status-chip pending">Planned</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Length</div>
+          <div class="ws-task"><span class="task-icon">○</span> Blended — in-person and online</div>
+          <div class="ws-task"><span class="task-icon">○</span> Synchronous &amp; asynchronous components</div>
+          <div class="ws-task"><span class="task-icon">○</span> Number of faculty</div>
+          <div class="ws-task"><span class="task-icon">○</span> Certificate granting unit</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- SECTION 4: PRACTITIONER ENGAGEMENT -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">Practitioner Engagement</div>
+      </div>
+      <div class="section-desc no-print">Needs assessments &amp; co-design workshops</div>
+    </div>
+
+    <div class="workstream-grid">
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Needs Assessment</div>
+          <span class="status-chip pending">Planned</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Interviews with target practitioners</div>
+          <div class="ws-task"><span class="task-icon">○</span> Survey of potential user organisations</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Co-Design Workshops</div>
+          <span class="status-chip future">Future</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Organise first practitioner workshop (format TBD)</div>
+          <div class="ws-task"><span class="task-icon">○</span> Validate programme concept with users</div>
+          <div class="ws-task"><span class="task-icon">○</span> Capture feedback</div>
+          <div class="ws-task"><span class="task-icon">○</span> Iterate based on workshop outcomes</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- SECTION 5: CONTENT DEVELOPMENT -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">Content Development</div>
+      </div>
+      <div class="section-desc no-print">Materials, faculty &amp; expert identification</div>
+    </div>
+
+    <div class="workstream-grid">
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Develop Programme Materials</div>
+          <span class="status-chip pending">Planned</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">✓</span> Module I: Mediation &amp; Diplomacy — existing base</div>
+          <div class="ws-task"><span class="task-icon">✓</span> Module II: Cultural Sensitivity &amp; AI — existing base</div>
+          <div class="ws-task"><span class="task-icon">○</span> Module III: Cultural-Historic — research &amp; outline</div>
+          <div class="ws-note">🔑 Milestone: Content developed</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill pending" style="width:30%"></div></div>
+            <div class="progress-pct">30%</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Faculty &amp; Expert Identification</div>
+          <span class="status-chip pending">Planned</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">◷</span> Map internal faculty across MIT, PON &amp; Tufts</div>
+          <div class="ws-task"><span class="task-icon">○</span> Identify external guest experts as teaching contributors</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill pending" style="width:15%"></div></div>
+            <div class="progress-pct">15%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- SECTION 6: PILOT PHASE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">Pilot Phase</div>
+      </div>
+      <div class="section-desc no-print">First cohort workshop, feedback &amp; scale decision</div>
+    </div>
+
+    <div class="workstream-grid">
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Pilot Workshop — First Cohort</div>
+          <span class="status-chip future">Future</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Recruit first cohort (15–25 participants target)</div>
+          <div class="ws-task"><span class="task-icon">○</span> Run pilot workshop (format: in-person / hybrid)</div>
+          <div class="ws-task"><span class="task-icon">○</span> Deliver all three modules in condensed form</div>
+          <div class="ws-note">🔑 Milestone: First pilot launched</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-header">
+          <div class="ws-card-title">Evaluation &amp; Scale Decision</div>
+          <span class="status-chip future">Future</span>
+        </div>
+        <div class="ws-card-body">
+          <div class="ws-task"><span class="task-icon">○</span> Collect feedback from participants and partners</div>
+          <div class="ws-task"><span class="task-icon">○</span> Decision: iterate, expand, or scale</div>
+          <div class="ws-note">🔑 Milestones: Evaluation of pilot · Decision to scale</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill future" style="width:0%"></div></div>
+            <div class="progress-pct">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- KEY MILESTONES -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number" style="font-size:28px;">★</div>
+      <div>
+        <div class="section-title">Key Milestones</div>
+      </div>
+    </div>
+
+    <div class="milestone-grid">
+      <div class="milestone-item">
+        <div class="ms-dot active"></div>
+        <div class="ms-seq">M-01</div>
+        <div class="ms-text">Internal clarity on programme concept</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot active"></div>
+        <div class="ms-seq">M-02</div>
+        <div class="ms-text">Confirmation of key partners</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot future"></div>
+        <div class="ms-seq">M-03</div>
+        <div class="ms-text">First funding secured</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot future"></div>
+        <div class="ms-seq">M-04</div>
+        <div class="ms-text">Content developed</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot future"></div>
+        <div class="ms-seq">M-05</div>
+        <div class="ms-text">First external partner engaged</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot future"></div>
+        <div class="ms-seq">M-06</div>
+        <div class="ms-text">First pilot launched</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot future"></div>
+        <div class="ms-seq">M-07</div>
+        <div class="ms-text">Evaluation of pilot</div>
+      </div>
+      <div class="milestone-item">
+        <div class="ms-dot future"></div>
+        <div class="ms-seq">M-08</div>
+        <div class="ms-text">Decision to scale</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="ruled">
+
+  <!-- INDICATIVE TIMELINE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-number" style="font-size:22px; padding-top:8px;">→</div>
+      <div>
+        <div class="section-title">Indicative Timeline</div>
+      </div>
+      <div class="section-desc no-print">Non-linear · parallel workstreams · evolving</div>
+    </div>
+
+    <div class="timeline-wrap">
+      <div class="timeline-inner">
+        <div class="tl-header">
+          <div class="tl-header-cell">Workstream</div>
+          <div class="tl-header-cell">Q1 '26</div>
+          <div class="tl-header-cell">Q2 '26</div>
+          <div class="tl-header-cell">Q3 '26</div>
+          <div class="tl-header-cell">Q4 '26</div>
+          <div class="tl-header-cell">Q1 '27</div>
+          <div class="tl-header-cell">Q2 '27</div>
+          <div class="tl-header-cell">Q3 '27</div>
+          <div class="tl-header-cell">Q4 '27</div>
+        </div>
+        <!-- Programme Design -->
+        <div class="tl-row">
+          <div class="tl-label">Programme Design</div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar active" style="left:10%; width:80%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar active" style="left:0; width:100%"></div></div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+        </div>
+        <!-- Partnerships -->
+        <div class="tl-row">
+          <div class="tl-label">Confirm Partnerships</div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar active" style="left:40%; width:60%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar active" style="left:0; width:70%"></div></div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+        </div>
+        <!-- Financing -->
+        <div class="tl-row">
+          <div class="tl-label">Secure Financing</div>
+          <div class="tl-cell"></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:20%; width:80%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:0; width:60%"></div></div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+        </div>
+        <!-- Practitioner Engagement -->
+        <div class="tl-row">
+          <div class="tl-label">Practitioner Engagement</div>
+          <div class="tl-cell"></div><div class="tl-cell"></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:10%; width:80%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:0; width:50%"></div></div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+        </div>
+        <!-- Content Development -->
+        <div class="tl-row">
+          <div class="tl-label">Content Development</div>
+          <div class="tl-cell"></div><div class="tl-cell"></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:30%; width:70%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:0; width:100%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar pending" style="left:0; width:50%"></div></div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+        </div>
+        <!-- Pilot -->
+        <div class="tl-row">
+          <div class="tl-label">Pilot Phase</div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar future" style="left:50%; width:50%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar future" style="left:0; width:80%"></div></div>
+          <div class="tl-cell"></div><div class="tl-cell"></div>
+        </div>
+        <!-- Scale -->
+        <div class="tl-row">
+          <div class="tl-label">Evaluation &amp; Scale</div>
+          <div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div><div class="tl-cell"></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar future" style="left:50%; width:50%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar future" style="left:0; width:100%"></div></div>
+          <div class="tl-cell" style="position:relative"><div class="tl-bar future" style="left:0; width:50%"></div></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:11px; color:var(--slate); margin-top:10px; font-style:italic; font-family:'DM Mono',monospace;">
+      ↑ This is a living roadmap. Timeline reflects indicative quarters — workstreams are non-linear and evolve through iteration.
+    </p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer no-print">
+  <div>Certificate Runway · MIT · MIT–Harvard PON · Tufts</div>
+  <div>Living Roadmap · Iterative Programme Development · v1.0 March 2026</div>
+</div>
+
+</body>
+</html>
